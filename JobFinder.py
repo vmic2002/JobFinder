@@ -25,19 +25,33 @@ class DatePosted(Enum):
     PAST_24_HRS = "r86400" # because of f_TPR in url =r86400 is for past 24hours
 
 
-# Params to modify
-datePosted = DatePosted.PAST_WEEK
-keywords = "software%20engineering%20intern"
-location = "California%2C%20United%20States"
-desiredWorkPeriod = "summer-2024"#this will be in the url of the linkedin job posting
+###### Params to modify ###########
 #TODO COULD ALSO MODIGY PARAM "keywords" to other values than software engineering intern
 #so that this script could automate the job application process for any field
+datePosted = DatePosted.PAST_WEEK
+keywords ="software engineering intern"
+location = "California, United States" 
+desiredWorkPeriod = "summer-2024"#this will be in the url of the linkedin job posting
+linkedInEmailAddress = "michavictor@gmail.com" #TODO input("Input LinkedIn email address:")
+linkedInPassword = input("Input LinkedIn password:")
+
+##########################
+
 
 #linked in url where list of job postings will be 
-url = "https://www.linkedin.com/jobs/search/?f_TPR="+datePosted.value+"&keywords="+keywords+"&location="+location+"&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true"
+jobPostingsURL = "https://www.linkedin.com/jobs/search/?f_TPR="+datePosted.value+"&keywords="+keywords.replace(" ", "%20")+"&location="+location.replace(" ", "%20")+"&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true"
 
+
+
+keywords = keywords.replace(" ", "%2520")
+location = location.replace(" ", "%2520")
+location = location.replace(",", "%252C")
+
+
+signIn = "https://www.linkedin.com/login?emailAddress=&fromSignIn=&fromSignIn=true&session_redirect=https%3A%2F%2Fwww.linkedin.com%2Fjobs%2Fsearch%2F%3Ff_TPR%3D"+datePosted.value+"%26keywords%3D"+keywords+"%26location%3D"+location+"%26origin%3DJOB_SEARCH_PAGE_JOB_FILTER%26refresh%3Dtrue&trk=public_jobs_nav-header-signin"
+
+#print(signIn)
 #print(url)
-
 # Configure Chrome options
 chrome_options = Options()
 chrome_options.headless = False  # Make the browser window visible
@@ -47,13 +61,40 @@ driver = webdriver.Chrome(options=chrome_options)
 
 try:
     # Open the webpage
-    driver.get(url)
+    driver.get(signIn)
+    print(jobPostingsURL)
+    #driver.get(jobPostingsURL)
 except WebDriverException as e:
     # Handle the exception
     print("An error occurred:", e)
 
-# Now loop through list of job postings on this site
 
+#sign in to LinkedIn
+
+# Locate the email text field by its ID
+email_field = driver.find_element(By.ID, "username")
+
+# Input the email using send_keys()
+email_field.send_keys(linkedInEmailAddress)
+
+# Locate the password text field by its ID
+password_field = driver.find_element(By.ID, "password")
+
+# Input the password using send_keys()
+password_field.send_keys(linkedInPassword)
+
+# Find the button element by XPath
+button = driver.find_element(By.XPATH, "//button[@class='btn__primary--large from__button--floating' and @data-litms-control-urn='login-submit']")
+
+# Click the button (LOG IN)
+button.click()
+
+sleep(5)
+
+#driver.get(jobPostingsURL)
+
+
+# Now loop through list of job postings on this site
 # Get the page source
 page_source = driver.page_source
 
@@ -61,10 +102,23 @@ page_source = driver.page_source
 soup = BeautifulSoup(page_source, 'html.parser')
 
 # For example, find all 'a' elements with a specific class
-target_links = soup.find_all('a', class_='base-card__full-link')
+target_links1 = soup.find_all('a', class_='base-card__full-link')
+
+
+
+# Find all <a> tags with the specified class
+target_links2 = soup.find_all('a', class_='disabled ember-view job-card-container__link job-card-list__title job-card-list__title--link')
+
+# Extract href attributes from the found <a> tags
+href_list = ["linkedin.com"+link.get('href') for link in target_links2]
+print("Found "+str(len(href_list))+" using targetlink2")
+for x in href_list:
+    print(x)
+
+#SOMETIMES IT WOKRS FOR TARGETLINK2 SOMETIMES FOR THE 1
 
 linkedInJobPostingsLinks = []
-for link in target_links:
+for link in target_links1:
     if desiredWorkPeriod in link.get('href'):
         linkedInJobPostingsLinks.append(link.get('href'))
 
@@ -76,13 +130,16 @@ for link in target_links:
 # - delete tab
 # - continue loop
 i = 0
-print("Gathered a total of "+str(len(linkedInJobPostingsLinks))+" LinkedIn job postings...")
+print("Gathered a total of "+str(len(linkedInJobPostingsLinks))+" LinkedIn job postings... using targetlink1")
 for l in linkedInJobPostingsLinks:
     print(i)
     print("\tNavigating to LinkedIn job posting: "+l)
     driver.get(l)
     #TODO BUG WHERE SOMETIMES GOES TO LINKEDIN JOB POSTING AND SOMETIMES ASKS USER TO LOG IN TO LINKEDIN
     #TODO NEED TO CLICK ON APPLY BUTTON ETC OR GET URL
+    #sleep(15)
+    #button = driver.find_element_by_class_name("sign-up-modal__outlet")
+    #button.click()
     sleep(2)
     i+=1
 

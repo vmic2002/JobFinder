@@ -13,6 +13,10 @@ from selenium.webdriver.common.by import By
 from enum import Enum
 
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
 from bs4 import BeautifulSoup
 
 
@@ -108,7 +112,7 @@ soup = BeautifulSoup(page_source, 'html.parser')
 # For example, find all 'a' elements with a specific class
 target_links1 = soup.find_all('a', class_='base-card__full-link')
 
-#TODO maybe just find all a elements with href field
+# maybe just find all a elements with href field? for now doing method 1 and 2
 
 # Find all <a> tags with the specified class
 target_links2 = soup.find_all('a', class_='disabled ember-view job-card-container__link job-card-list__title job-card-list__title--link')
@@ -141,13 +145,21 @@ for l in linkedInJobPostingsLinks:
     print(i)
     print("\tNavigating to LinkedIn job posting: "+l) 
     driver.get(l)
-    #TODO NEED TO CLICK ON APPLY BUTTON ETC OR GET URL
-    #sleep(15)
-    #button = driver.find_element_by_class_name("sign-up-modal__outlet")
-    #button.click()
-    sleep(2)
+    #TODO NEED TO CLICK ON APPLY BUTTON, that will redirect to site where we can uplaod resume etc
+    # Wait for the div element to be present
+    div_element = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "jobs-apply-button--top-card"))
+    )
+
+    # Find the button element inside the div
+    apply_button = div_element.find_element(By.TAG_NAME, "button")
+
+    # Click the button
+    apply_button.click()
+    #works! button is found and clicked
+    sleep(5)
     i+=1
 
 print("DONE")
-#sleep(1000)#TODO remove sleep at the end so it is fast
+sleep(1000)#TODO remove sleep at the end so it is fast
 driver.close()

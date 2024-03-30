@@ -18,7 +18,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 from bs4 import BeautifulSoup
-
+from getpass import getpass
 
 class DatePosted(Enum):
     # linked in has 4 options to look for job positions within a range of time
@@ -38,7 +38,7 @@ location = "California, United States"
 desiredWorkPeriod1 = "summer-2024"#this will be in the url of the linkedin job posting
 desiredWorkPeriod2 = "Summer 2024"#this will be in the name of the linkedin job posting
 linkedInEmailAddress = "michavictor@gmail.com" #TODO input("Input LinkedIn email address:")
-linkedInPassword = input("Input LinkedIn password:")
+linkedInPassword = getpass("Input LinkedIn password: ")#input("Input LinkedIn password:")
 
 ##########################
 

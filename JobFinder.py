@@ -82,6 +82,7 @@ for l in linkedInJobPostingsLinks:
     print("\tNavigating to LinkedIn job posting: "+l)
     driver.get(l)
     #TODO BUG WHERE SOMETIMES GOES TO LINKEDIN JOB POSTING AND SOMETIMES ASKS USER TO LOG IN TO LINKEDIN
+    #TODO NEED TO CLICK ON APPLY BUTTON ETC OR GET URL
     sleep(2)
     i+=1
 

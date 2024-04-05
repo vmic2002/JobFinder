@@ -17,6 +17,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from getpass import getpass
 
+def scrollDown(scroll_amount, div_element):
+    driver.execute_script("arguments[0].scrollTop += "+str(scroll_amount)+";", div_element)
+
 def inputField(driver, elementId, sol, by):
     timeout = 2 # in seconds 
     try:
@@ -161,9 +164,6 @@ while True:
     soup = BeautifulSoup(page_source, 'html.parser')
     target_elements = soup.find_all('a', class_=class_name)
     
-
-
-    
     linkedInJobPostingsLinks = ["https://linkedin.com"+element.get('href') for element in target_elements if desiredWorkPeriod2 in element.get('aria-label')] #if desiredWorkPeriod in element.get('href')]
 
     for i in range(len(linkedInJobPostingsLinks)):
@@ -179,8 +179,9 @@ while True:
         
     # Scroll down to load more content
     # Scroll the specific element (div_element) by a specific amount
-    driver.execute_script("arguments[0].scrollTop += "+str(scroll_amount)+";", div_element)
-
+    
+    scrollDown(scroll_amount, div_element)
+    
     # Wait for some time for new content to load
     sleep(3)  # Adjust the sleep time as needed
     
@@ -253,6 +254,9 @@ for l in allLinkedInJobPostingsLinks:
     # TODO ON JOB POSTING PAGE, SO CAN MAYBE UPLOAD RESUME ETC
     #sleep(2)
     # things above this work, but TODO input first name and last name, upload resume etc not yet working
+    # THE BUG IS PROBABLY BECAUSE YOU HAVE TO SCROLL DOWN IN ORDER TO HAVE ACCESS TO THE FIRST NAME, LAST NAME, ETC 
+    # PROBABLY YOU CANNOT INPUT A FIELD VALUE IF YOU CANT SEE IT ON THE SCREEN BECAUSE IT IS DYNAMICALLY LOADED
+    # WILL NEED TO CALL SCROLLDOWN FUNC
     possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
     possibleFieldIdLastName = ["last_name"]
     for elementId in possibleFieldIdFirstName:

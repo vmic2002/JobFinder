@@ -21,7 +21,7 @@ def scrollDown(scroll_amount, div_element):
     driver.execute_script("arguments[0].scrollTop += "+str(scroll_amount)+";", div_element)
 
 def inputField(driver, elementId, sol, by):
-    timeout = 2 # in seconds 
+    timeout = 1 # in seconds 
     try:
         # Wait for the element to appear
         element = WebDriverWait(driver, timeout).until(
@@ -231,21 +231,64 @@ for l in linkedInJobPostingsLinks:
         # WILL NEED TO CALL SCROLLDOWN FUNC
         possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
         possibleFieldIdLastName = ["last_name"]
-        for elementId in possibleFieldIdFirstName:
-            if inputField(driver, elementId, firstName, By.ID): #or inputField(driver, elementId, firstName, By.NAME):
-                print("\tFirst name done...")
+        # Find the "body" element since we want to scroll down whole webpage
+        #temp=input("READY TO MOVE ON?")
+        div_element = driver.find_element(By.XPATH, "//html")#driver.find_element(By.TAG_NAME, 'body')
+
+       
+
+        # Get the initial scroll height
+        last_height = driver.execute_script("return arguments[0].scrollHeight;", div_element)
+        scroll_amount = 0.8*last_height
+
+        #sleep(100)
+        count=0
+        while True:
+            print("num times scrolled down: "+str(count))
+            count+=1
+            #scroll down page until can see input field for first name, last name, email, etc
+            for elementId in possibleFieldIdFirstName:
+                if inputField(driver, elementId, firstName, By.ID): #or inputField(driver, elementId, firstName, By.NAME):
+                    print("\tFirst name done...")
+                    break
+            
+            for elementId in possibleFieldIdLastName:
+                if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
+                    print("\tLast name done...")
+                    break
+            print("scrolling down")
+            scrollDown(scroll_amount, div_element)
+            #driver.execute_script("window.scrollBy(0, 100);")
+            #driver.execute_script("arguments[0].scrollBy(0, -300);", div_element)
+
+            # Wait for some time for new content to load
+            sleep(2)  # Adjust the sleep time as needed COULD make it DEPEND ON NETWORK SPEED
+
+            # Get the new scroll height
+            new_height = driver.execute_script("return arguments[0].scrollHeight;", div_element)
+            print("last height:"+str(last_height)+" new height: "+str(new_height))
+            # Check if scroll height has not changed (indicating scrolled to the bottom)
+            if new_height == last_height:
+                print("Scrolled to bottom of webpage")
                 break
-        
-        for elementId in possibleFieldIdLastName:
-            if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
-                print("\tLast name done...")
+            
+            # Update last height
+            last_height = new_height
+            
+            #FOR TESTING ONLY
+            if count==6:
+                print("scrolled max times")
                 break
-               
-        # TODO when done applying for a job posting, delete the tab so that the only tabs remaining at the end are the tabs that have not automatically been applied to by the script, could prompt user at end to manually apply to the remaining job postings
-     
-        sleep(2)
-    except TimeoutException as e:
+            
+
+        # IF REACH HERE THEN ALL OR MOST OF THE FIELDS HAVE BEEN FILLED BY THE SCRIPT AND SHOULD CLICK ON APPLY BUTTON TO SEND APPLICATION
+        # TODO if&&when done applying for a job posting, delete the tab so that the only tabs remaining at the end are the tabs that have not automatically been applied to by the script, could prompt user at end to manually apply to the remaining job postings
+             
+    except TimeoutException as e1:
         print("Did not find \"Apply\" button for job posting: "+l)
+        print("Could NOT apply to job posting")
+    except NoSuchElementException as e2:
+        print("Could NOT apply to job posting")
     i+=1
     print("-"*37)
 

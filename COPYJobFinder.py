@@ -17,6 +17,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from getpass import getpass
 
+def scrollDown(scroll_amount, div_element):
+    driver.execute_script("arguments[0].scrollTop += "+str(scroll_amount)+";", div_element)
+
 def inputField(driver, elementId, sol, by):
     timeout = 2 # in seconds 
     try:
@@ -47,11 +50,11 @@ class DatePosted(Enum):
 #so that this script could automate the job application process for any field
 firstName = "Victor"
 lastName = "Micha"
-datePosted = DatePosted.PAST_24_HRS
+datePosted = DatePosted.PAST_WEEK
 keywords ="software engineering intern"
 location = "California, United States" 
 #desiredWorkPeriod1 = "summer-2024"#this will be in the url of the linkedin job posting
-desiredWorkPeriod2 = "Summer 2024"#this will be in the name of the linkedin job posting
+desiredWorkPeriod = "Summer 2024"#this will be in the name of the linkedin job posting
 linkedInEmailAddress = "michavictor@gmail.com" #TODO input("Input LinkedIn email address:")
 linkedInPassword = getpass("Input LinkedIn password: ")#input("Input LinkedIn password:")
 
@@ -136,7 +139,7 @@ print("Searching for job postings...")
 
 # Now loop through list of job postings on this site
 
-allLinkedInJobPostingsLinks = set()
+linkedInJobPostingsLinks = set()
 
 # Define the class name of the 'a' elements you want to find
 class_name = 'disabled ember-view job-card-container__link job-card-list__title job-card-list__title--link'
@@ -145,7 +148,7 @@ div_element = driver.find_element(By.XPATH, """//div[@class='jobs-search-results
           
           ']""")
 
-scroll_amount = driver.execute_script("return arguments[0].scrollHeight;", div_element)        
+scroll_amount = 0.8*driver.execute_script("return arguments[0].scrollHeight;", div_element)        
 
 
 
@@ -160,116 +163,92 @@ while True:
     # Parse the HTML content using BeautifulSoup
     soup = BeautifulSoup(page_source, 'html.parser')
     target_elements = soup.find_all('a', class_=class_name)
-    
-
-
-    
-    linkedInJobPostingsLinks = ["https://linkedin.com"+element.get('href') for element in target_elements if desiredWorkPeriod2 in element.get('aria-label')] #if desiredWorkPeriod in element.get('href')]
-
-    for i in range(len(linkedInJobPostingsLinks)):
-        #this will help ensure no duplicate job postings are added (same job id but different end of urls)
-        #so trim off end of urls
-        index = linkedInJobPostingsLinks[i].find("/", 35)
-        linkedInJobPostingsLinks[i] = linkedInJobPostingsLinks[i][:index]
-
    
+    
+    #to make ensure no duplicate job postings are added (same job id but different end of urls) -> trim off end of urls
+    currLinkedInJobPostingsLinks = ["https://linkedin.com"+element.get('href')[:element.get('href').find("/", 11)] 
+        for element in target_elements
+            if desiredWorkPeriod in element.get('aria-label')]   
+    
     # Append the found links to the list
-    allLinkedInJobPostingsLinks.update(linkedInJobPostingsLinks)
+    linkedInJobPostingsLinks.update(currLinkedInJobPostingsLinks)
 
         
     # Scroll down to load more content
     # Scroll the specific element (div_element) by a specific amount
-    driver.execute_script("arguments[0].scrollTop += "+str(scroll_amount)+";", div_element)
-
+    # need to scroll down and fetch elements again because they are dynamically loaded when user scrolls (or bot :)) 
+    scrollDown(scroll_amount, div_element)
+    
     # Wait for some time for new content to load
-    sleep(3)  # Adjust the sleep time as needed
+    sleep(2)  # Adjust the sleep time as needed COULD make it DEPEND ON NETWORK SPEED
     
     # Get the new scroll height
     new_height = driver.execute_script("return arguments[0].scrollHeight;", div_element)
     
-    # Check if scroll height has not changed (indicating end of content)
+    # Check if scroll height has not changed (indicating scrolled to the bottom)
     if new_height == last_height:
-        print("Reached end of div.")
+        #print("Scrolled to bottom of job postings div.")
         break
     
     # Update last height
     last_height = new_height
 
 
-
-
-print(allLinkedInJobPostingsLinks)
-print(len(allLinkedInJobPostingsLinks))
-sleep(20)
-
-
-
-
-
-
-
-
-
-# Extract href attributes from the found <a> tags
-#linkedInJobPostingsLinks2 = ["https://linkedin.com"+link.get('href') for link in target_links2] #if desiredWorkPeriod2 in link.get('aria-label')] #if desiredWorkPeriod in link.get('href')]
-#print("Found "+str(len(linkedInJobPostingsLinks2))+" using targetlink2")
-#for x in linkedInJobPostingsLinks2:
- #   print(x)
-
-#SOMETIMES IT WOKRS FOR TARGETLINK2 SOMETIMES FOR THE 1
-
-#linkedInJobPostingsLinks1 = []
-#for link in target_links1:
- #   if desiredWorkPeriod1 in link.get('href'):
- #       linkedInJobPostingsLinks1.append(link.get('href'))
+#for x in linkedInJobPostingsLinks:
+#    print("\t"+x)
+print("Found total of "+str(len(linkedInJobPostingsLinks))+" job postings")
 
 # TODO Now need to loop through linkedInJobPostingsLinks and one by one:
 # - open new tab with this url
-# - click on apply button or get url for job posting
+# - click on apply button
 # - fill fields (resume, age, ...)
 # - click on apply
 # - delete tab
 # - continue loop
+
 i = 0
-#print("Found "+str(len(linkedInJobPostingsLinks1))+" using targetlink1")
-#linkedInJobPostingsLinks = linkedInJobPostingsLinks1 if len(linkedInJobPostingsLinks1)>len(linkedInJobPostingsLinks2) else linkedInJobPostingsLinks2
-#sleep(100)
-for l in allLinkedInJobPostingsLinks:
-    print(i)
-    print("\tNavigating to LinkedIn job posting: "+l) 
+print("-"*37)
+for l in linkedInJobPostingsLinks:
+    print("Navigating to LinkedIn job posting "+str(i)+":")
+    print("\t"+l)
     driver.get(l)
-    # CLICK ON APPLY BUTTON, that will redirect to site where we can uplaod resume etc
-    # Wait for the div element to be present
-    div_element = WebDriverWait(driver, 2).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "jobs-apply-button--top-card"))
-    )
-
-    # Find the button element inside the div
-    apply_button = div_element.find_element(By.TAG_NAME, "button")
-
-    # Click the button
-    apply_button.click()
-    #works! button is found and clicked
-    # TODO ON JOB POSTING PAGE, SO CAN MAYBE UPLOAD RESUME ETC
-    #sleep(2)
-    # things above this work, but TODO input first name and last name, upload resume etc not yet working
-    possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
-    possibleFieldIdLastName = ["last_name"]
-    for elementId in possibleFieldIdFirstName:
-        if inputField(driver, elementId, firstName, By.ID): #or inputField(driver, elementId, firstName, By.NAME):
-            print("\tFirst name done...")
-            break
-    
-    for elementId in possibleFieldIdLastName:
-        if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
-            print("\tLast name done...")
-            break
-       
-
- 
-    sleep(2)
+    try:
+        # CLICK ON APPLY BUTTON, that will redirect to site where we can uplaod resume etc
+        # Wait for the div element to be present
+        div_element = WebDriverWait(driver, 2).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "jobs-apply-button--top-card"))
+        )
+        # Find the button element inside the div
+        apply_button = div_element.find_element(By.TAG_NAME, "button")
+        # Click the button
+        apply_button.click()
+        #works! button is found and clicked
+        # TODO ON JOB POSTING PAGE, SO CAN MAYBE UPLOAD RESUME ETC
+        #sleep(2)
+        # things above this work, but TODO input first name and last name, upload resume etc not yet working
+        # THE BUG IS PROBABLY BECAUSE YOU HAVE TO SCROLL DOWN IN ORDER TO HAVE ACCESS TO THE FIRST NAME, LAST NAME, ETC 
+        # PROBABLY YOU CANNOT INPUT A FIELD VALUE IF YOU CANT SEE IT ON THE SCREEN BECAUSE IT IS DYNAMICALLY LOADED
+        # WILL NEED TO CALL SCROLLDOWN FUNC
+        possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
+        possibleFieldIdLastName = ["last_name"]
+        for elementId in possibleFieldIdFirstName:
+            if inputField(driver, elementId, firstName, By.ID): #or inputField(driver, elementId, firstName, By.NAME):
+                print("\tFirst name done...")
+                break
+        
+        for elementId in possibleFieldIdLastName:
+            if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
+                print("\tLast name done...")
+                break
+               
+        # TODO when done applying for a job posting, delete the tab so that the only tabs remaining at the end are the tabs that have not automatically been applied to by the script, could prompt user at end to manually apply to the remaining job postings
+     
+        sleep(2)
+    except TimeoutException as e:
+        print("Did not find \"Apply\" button for job posting: "+l)
     i+=1
+    print("-"*37)
 
-print("DONE")
+print("Done")
 sleep(1000)#TODO remove sleep at the end so it is fast
 driver.close()

@@ -50,7 +50,7 @@ class DatePosted(Enum):
 #so that this script could automate the job application process for any field
 firstName = "Victor"
 lastName = "Micha"
-datePosted = DatePosted.PAST_24_HRS
+datePosted = DatePosted.PAST_WEEK
 keywords ="software engineering intern"
 location = "California, United States" 
 #desiredWorkPeriod1 = "summer-2024"#this will be in the url of the linkedin job posting
@@ -207,44 +207,47 @@ print("Found total of "+str(len(linkedInJobPostingsLinks))+" job postings")
 # - continue loop
 
 i = 0
+print("-"*37)
 for l in linkedInJobPostingsLinks:
     print("Navigating to LinkedIn job posting "+str(i)+":")
     print("\t"+l)
     driver.get(l)
-    # CLICK ON APPLY BUTTON, that will redirect to site where we can uplaod resume etc
-    # Wait for the div element to be present
-    div_element = WebDriverWait(driver, 2).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "jobs-apply-button--top-card"))
-    )
-
-    # Find the button element inside the div
-    apply_button = div_element.find_element(By.TAG_NAME, "button")
-
-    # Click the button
-    apply_button.click()
-    #works! button is found and clicked
-    # TODO ON JOB POSTING PAGE, SO CAN MAYBE UPLOAD RESUME ETC
-    #sleep(2)
-    # things above this work, but TODO input first name and last name, upload resume etc not yet working
-    # THE BUG IS PROBABLY BECAUSE YOU HAVE TO SCROLL DOWN IN ORDER TO HAVE ACCESS TO THE FIRST NAME, LAST NAME, ETC 
-    # PROBABLY YOU CANNOT INPUT A FIELD VALUE IF YOU CANT SEE IT ON THE SCREEN BECAUSE IT IS DYNAMICALLY LOADED
-    # WILL NEED TO CALL SCROLLDOWN FUNC
-    possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
-    possibleFieldIdLastName = ["last_name"]
-    for elementId in possibleFieldIdFirstName:
-        if inputField(driver, elementId, firstName, By.ID): #or inputField(driver, elementId, firstName, By.NAME):
-            print("\tFirst name done...")
-            break
-    
-    for elementId in possibleFieldIdLastName:
-        if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
-            print("\tLast name done...")
-            break
-           
-    # TODO when done applying for a job posting, delete the tab so that the only tabs remaining at the end are the tabs that have not automatically been applied to by the script, could prompt user at end to manually apply to the remaining job postings
- 
-    sleep(2)
+    try:
+        # CLICK ON APPLY BUTTON, that will redirect to site where we can uplaod resume etc
+        # Wait for the div element to be present
+        div_element = WebDriverWait(driver, 2).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "jobs-apply-button--top-card"))
+        )
+        # Find the button element inside the div
+        apply_button = div_element.find_element(By.TAG_NAME, "button")
+        # Click the button
+        apply_button.click()
+        #works! button is found and clicked
+        # TODO ON JOB POSTING PAGE, SO CAN MAYBE UPLOAD RESUME ETC
+        #sleep(2)
+        # things above this work, but TODO input first name and last name, upload resume etc not yet working
+        # THE BUG IS PROBABLY BECAUSE YOU HAVE TO SCROLL DOWN IN ORDER TO HAVE ACCESS TO THE FIRST NAME, LAST NAME, ETC 
+        # PROBABLY YOU CANNOT INPUT A FIELD VALUE IF YOU CANT SEE IT ON THE SCREEN BECAUSE IT IS DYNAMICALLY LOADED
+        # WILL NEED TO CALL SCROLLDOWN FUNC
+        possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
+        possibleFieldIdLastName = ["last_name"]
+        for elementId in possibleFieldIdFirstName:
+            if inputField(driver, elementId, firstName, By.ID): #or inputField(driver, elementId, firstName, By.NAME):
+                print("\tFirst name done...")
+                break
+        
+        for elementId in possibleFieldIdLastName:
+            if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
+                print("\tLast name done...")
+                break
+               
+        # TODO when done applying for a job posting, delete the tab so that the only tabs remaining at the end are the tabs that have not automatically been applied to by the script, could prompt user at end to manually apply to the remaining job postings
+     
+        sleep(2)
+    except TimeoutException as e:
+        print("Did not find \"Apply\" button for job posting: "+l)
     i+=1
+    print("-"*37)
 
 print("Done")
 sleep(1000)#TODO remove sleep at the end so it is fast

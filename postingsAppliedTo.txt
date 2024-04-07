@@ -1,0 +1,4 @@
+#this file will keep track of all the URLS of job postings (1 per line) that have been applied to (to avoid applying to same job twice, but can also use this file to re-apply)
+#for the job postings that have been applied to automatically, the URLs will automatically be appended to this file
+#for the job postings that have been applied to manually, the URLs will have to be manually added by the user
+#need to make sure that the URLs dont contain anything after the job ID, to ensure no duplicates (same job ID but different end of URL) 

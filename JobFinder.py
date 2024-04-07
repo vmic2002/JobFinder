@@ -51,6 +51,7 @@ class DatePosted(Enum):
 #so that this script could automate the job application process for any field
 firstName = "Victor"
 lastName = "Micha"
+emailAddress = "victor.micha@mail.mcgill.ca" # job posting will send confirmation at this email
 datePosted = DatePosted.PAST_MONTH
 keywords ="software engineering intern"
 location = "California, United States" 
@@ -250,9 +251,7 @@ for l in linkedInJobPostingsLinks:
         # Click the button
         sleep(1)
         print(driver.current_url)
-        apply_button.click()
-
-        
+        apply_button.click() 
         sleep(2)
 
         # Switch to the new tab THIS IS WHAT WAS CAUSING ALL BUGS RELATING TO SCROLLING AND INPUT FIELDS NOT WORKING
@@ -263,8 +262,7 @@ for l in linkedInJobPostingsLinks:
         
         possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
         possibleFieldIdLastName = ["last_name"]
-
-        #works! button is found and clicked
+        possibleFieldIdEmailAddress = ["email"]
         #sleep(2) 
         sleep(2)
         #need to input fields, dont actually need to scroll down but should work
@@ -280,8 +278,12 @@ for l in linkedInJobPostingsLinks:
             if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
                 print("\tLast name done...")
                 break
-
-        
+    
+        for elementId in possibleFieldIdEmailAddress:
+            if inputField(driver, elementId, emailAddress, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
+                print("\tEmail done...")
+                break
+         
         #scroll_element = driver.find_element(By.XPATH, "//html")
         #scrollDown(500, scroll_element)
         sleep(1)

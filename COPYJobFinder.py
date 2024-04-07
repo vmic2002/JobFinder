@@ -16,12 +16,13 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from bs4 import BeautifulSoup
 from getpass import getpass
+import os
 
 def scrollDown(scroll_amount, div_element):
     driver.execute_script("arguments[0].scrollTop += "+str(scroll_amount)+";", div_element)
 
 def inputField(driver, elementId, sol, by):
-    timeout = 2 # in seconds 
+    timeout = 1 # in seconds 
     try:
         # Wait for the element to appear
         element = WebDriverWait(driver, timeout).until(
@@ -50,7 +51,7 @@ class DatePosted(Enum):
 #so that this script could automate the job application process for any field
 firstName = "Victor"
 lastName = "Micha"
-datePosted = DatePosted.PAST_WEEK
+datePosted = DatePosted.PAST_MONTH
 keywords ="software engineering intern"
 location = "California, United States" 
 #desiredWorkPeriod1 = "summer-2024"#this will be in the url of the linkedin job posting
@@ -76,8 +77,32 @@ signIn = "https://www.linkedin.com/login?emailAddress=&fromSignIn=&fromSignIn=tr
 #print(signIn)
 #print(url)
 # Configure Chrome options
+chrome_options = webdriver.ChromeOptions()
 
-driver = webdriver.Chrome()
+# Enable incognito mode so no caching etc
+chrome_options.add_argument("--incognito")
+
+# Initialize Chrome driver with ChromeOptions
+driver = webdriver.Chrome(options=chrome_options)
+#driver = webdriver.Chrome()
+
+"""
+#############TO TEST inputed fields not on screen and scrollDown  WORKS
+driver.get("https://emit.fa.ca3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/job/53911?utm_medium=jobshare")#"https://boards.greenhouse.io/verkada/jobs/4135597007?gh_src=cda0ce657us&source=LinkedIn")
+sleep(2)
+inputField(driver, "job_application_answers_attributes_0_text_value", "linkedinvicrtor", By.ID)#WORKS
+scroll_element = driver.find_element(By.XPATH, "//html")
+
+#while not inputField(driver, "first_name", "VICTO12", By.ID):
+scrollDown(500, scroll_element)#WORKS
+#    sleep(1)
+#    print(".")
+#print("INputed first name successfully")
+sleep(2)
+#############
+"""
+
+
 #driver = webdriver.Safari()
 try:
     # Open the webpage
@@ -206,11 +231,13 @@ print("Found total of "+str(len(linkedInJobPostingsLinks))+" job postings")
 # - delete tab
 # - continue loop
 
-i = 0
+i = 0 #must start at 0
 print("-"*37)
 for l in linkedInJobPostingsLinks:
     print("Navigating to LinkedIn job posting "+str(i)+":")
     print("\t"+l)
+    driver.switch_to.window(driver.window_handles[0])
+    sleep(1)
     driver.get(l)
     try:
         # CLICK ON APPLY BUTTON, that will redirect to site where we can uplaod resume etc
@@ -221,34 +248,56 @@ for l in linkedInJobPostingsLinks:
         # Find the button element inside the div
         apply_button = div_element.find_element(By.TAG_NAME, "button")
         # Click the button
+        sleep(1)
+        print(driver.current_url)
         apply_button.click()
-        #works! button is found and clicked
-        # TODO ON JOB POSTING PAGE, SO CAN MAYBE UPLOAD RESUME ETC
-        #sleep(2)
-        # things above this work, but TODO input first name and last name, upload resume etc not yet working
-        # THE BUG IS PROBABLY BECAUSE YOU HAVE TO SCROLL DOWN IN ORDER TO HAVE ACCESS TO THE FIRST NAME, LAST NAME, ETC 
-        # PROBABLY YOU CANNOT INPUT A FIELD VALUE IF YOU CANT SEE IT ON THE SCREEN BECAUSE IT IS DYNAMICALLY LOADED
-        # WILL NEED TO CALL SCROLLDOWN FUNC
+
+        
+        sleep(2)
+
+        # Switch to the new tab THIS IS WHAT WAS CAUSING ALL BUGS RELATING TO SCROLLING AND INPUT FIELDS NOT WORKING
+        driver.switch_to.window(driver.window_handles[i+1])#i+1 because order of window_handles is chronological (earliest opened tab first), so going to i+1 window means going to last job posting website tab
+        #important to driver.switch_to.window after clicking button because even though new tab is opened after clicking button, the driver is focused on the previous tab (with the button). so must switch_to.window so driver focuses on tab that was just recently opened
+        sleep(1)
+        print(driver.current_url)
+        
         possibleFieldIdFirstName = ["first_name","job_application[first_name]","field-first_name"]
         possibleFieldIdLastName = ["last_name"]
+
+        #works! button is found and clicked
+        #sleep(2) 
+        sleep(2)
+        #need to input fields, dont actually need to scroll down but should work
+        print("input fields")
+        #TODO ACTUALLY INPUT FIELDS (or move on to next job posting if fields not found), NOW IT WORKS DONT NEED TO SCROLL DOWN TO INPUT FIELDS SCROLL DOWN WAS JUST WAY OF MAKING SURE THAT DRIVER IS ON THE CORRECT WINDOW
+        
         for elementId in possibleFieldIdFirstName:
             if inputField(driver, elementId, firstName, By.ID): #or inputField(driver, elementId, firstName, By.NAME):
                 print("\tFirst name done...")
                 break
-        
+            
         for elementId in possibleFieldIdLastName:
             if inputField(driver, elementId, lastName, By.ID): # or inputField(driver, "field-last_name", lastName, By.ID):
                 print("\tLast name done...")
                 break
-               
-        # TODO when done applying for a job posting, delete the tab so that the only tabs remaining at the end are the tabs that have not automatically been applied to by the script, could prompt user at end to manually apply to the remaining job postings
-     
-        sleep(2)
-    except TimeoutException as e:
+
+        
+        #scroll_element = driver.find_element(By.XPATH, "//html")
+        #scrollDown(500, scroll_element)
+        sleep(1)
+        # IF REACH HERE THEN ALL OR MOST OF THE FIELDS HAVE BEEN FILLED BY THE SCRIPT AND SHOULD CLICK ON APPLY BUTTON TO SEND APPLICATION
+             
+    except TimeoutException as e1:
         print("Did not find \"Apply\" button for job posting: "+l)
+        print("Could NOT apply to job posting")
+    except NoSuchElementException as e2:
+        print(e2)
+        print("Could NOT apply to job posting")
     i+=1
     print("-"*37)
 
 print("Done")
+os.system("say Done")
 sleep(1000)#TODO remove sleep at the end so it is fast
 driver.close()
+

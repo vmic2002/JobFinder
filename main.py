@@ -39,21 +39,24 @@ chrome_options.add_argument("--incognito")
 driver = webdriver.Chrome(options=chrome_options)
 #driver = webdriver.Chrome()
 
-"""
-#############TO TEST inputed fields not on screen and scrollDown  WORKS
-driver.get("https://emit.fa.ca3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/job/53911?utm_medium=jobshare")#"https://boards.greenhouse.io/verkada/jobs/4135597007?gh_src=cda0ce657us&source=LinkedIn")
+
+####################FOR TESTING inputed fields not on screen and scrollDown  WORKS
+driver.get("https://boards.greenhouse.io/verkada/jobs/4135597007?gh_src=cda0ce657us&source=LinkedIn")#"https://boards.greenhouse.io/verkada/jobs/4135597007?gh_src=cda0ce657us&source=LinkedIn")
 sleep(2)
-inputField(driver, "job_application_answers_attributes_0_text_value", "linkedinvicrtor", By.ID)#WORKS
-scroll_element = driver.find_element(By.XPATH, "//html")
+#inputField(driver, "job_application_answers_attributes_0_text_value", "linkedinvicrtor", By.ID)#WORKS
+#scroll_element = driver.find_element(By.XPATH, "//html")
 
 #while not inputField(driver, "first_name", "VICTO12", By.ID):
-scrollDown(500, scroll_element)#WORKS
+#scrollDown(500, scroll_element)#WORKS
 #    sleep(1)
 #    print(".")
 #print("INputed first name successfully")
-sleep(2)
-#############
-"""
+tryApplyingAutomatically(driver)
+print("DONE")
+sleep(20)
+exit(1)
+#########################3
+
 
 
 #driver = webdriver.Safari()

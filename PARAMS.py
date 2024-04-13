@@ -10,9 +10,16 @@ class DatePosted(Enum):
 ###### Params to modify ###########
 #TODO COULD ALSO MODIGY PARAM "keywords" to other values than software engineering intern
 #so that this script could automate the job application process for any field
+#Params to input at job posting website
 firstName = "Victor"
 lastName = "Micha"
 emailAddress = "victor.micha@mail.mcgill.ca" # job posting will send confirmation at this email
+phoneNumber = "6504600726"
+linkedInProfile = "https://www.linkedin.com/in/victor-micha/"
+website = "https://github.com/vmic2002"
+resumeFilePath = "/Users/victormicha/Victor_Micha_Resume.pdf"
+
+#Params to find job postings on LinkedIn
 datePosted = DatePosted.PAST_MONTH
 keywords ="software engineering intern"
 location = "California, United States"
